@@ -1,0 +1,24 @@
+{
+    "private": true,
+    "name": "nr1-db-mount-points",
+    "description": "Nerdpack nr1-db-mount-points",
+    "version": "0.1.0",
+    "scripts": {
+        "start": "nr1 nerdpack:serve",
+        "test": "exit 0"
+    },
+    "nr1": {
+        "uuid": "e43eb340-7a23-4c6e-b5b2-e85417874f77",
+        "sdkVersion": 2
+    },
+    "dependencies": {
+        "prop-types": "^15.6.2",
+        "react": "^16.6.3",
+        "react-dom": "^16.6.3"
+    },
+    "browserslist": [
+        "last 2 versions",
+        "not ie < 11",
+        "not dead"
+    ]
+}
