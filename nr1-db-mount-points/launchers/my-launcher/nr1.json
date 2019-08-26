@@ -2,7 +2,7 @@
     "schemaType": "LAUNCHER",
     "id": "my-launcher",
     "description": "Describe me",
-    "displayName": "Nr1DbMountPoints",
+    "displayName": "DBA MOUNT POINTS",
     "icon": "interface_placeholders_icon-placeholder",
     "rootNerdletId": "e43eb340-7a23-4c6e-b5b2-e85417874f77.my-nerdlet"
 }
