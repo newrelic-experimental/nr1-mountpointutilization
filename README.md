@@ -1,2 +1,22 @@
-# nr1-mountpointutilizaiton-nerdpack
-Nerdpack for DBAs to help understand the database usage.
+# @REPO@
+
+## Getting started
+
+Run the following scripts:
+
+```
+npm install
+npm start
+```
+
+Visit https://one.newrelic.com/?nerdpacks=local and :sparkles:
+
+## Creating new artifacts
+
+If you want to create new artifacts run the following command:
+
+```
+nr1 create
+```
+
+> Example: `nr1 create --type nerdlet --name my-nerdlet`.

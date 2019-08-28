@@ -1,0 +1,48 @@
+// symantic CSS
+@import url("//cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css");
+
+// font settings for progress area
+.progress {
+    color: #009933;
+    font-size: 20px;
+    font-weight: bold;
+    float: "right";
+}
+
+// Copied from nr1 Radio
+.radio-group {
+    input[type="radio"] {
+        background-color: #fafbfb;
+        border-radius: 100%;
+        border: 1px solid #b9bdbd;
+        height: 16px;
+        margin-left: 4px;
+        margin-right: 8px;
+        width: 16px;
+    }
+
+    input[type="radio"]:checked {
+        background-color: #0079bf;
+        border-color: #003555;
+    }
+}
+
+label {
+    color: #000e0e;
+    font-size: 14px;
+    line-height: 16px;
+    position: relative;
+}
+
+.radio-option {
+    -webkit-box-align: center;
+    align-items: center;
+    display: flex;
+    margin-bottom: 4px;
+}
+
+.chart {
+    padding: 10px;
+    width: 100%;
+    height: 300px;
+}

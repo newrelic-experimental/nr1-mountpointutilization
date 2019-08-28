@@ -1,0 +1,31 @@
+{
+    "private": true,
+    "name": "nr1-db-mount-points",
+    "description": "Nerdpack nr1-db-mount-points",
+    "version": "0.1.0",
+    "bugs": {
+        "email": "opensource@newrelic.com"
+    },
+    "scripts": {
+        "start": "nr1 nerdpack:serve",
+        "test": "exit 0"
+    },
+    "nr1": {
+        "uuid": "e43eb340-7a23-4c6e-b5b2-e85417874f77",
+        "sdkVersion": 2
+    },
+    "dependencies": {
+        "graphql": "^14.5.3",
+        "graphql-tag": "^2.10.1",
+        "prop-types": "^15.7.2",
+        "react": "^16.9.0",
+        "react-dom": "^16.9.0",
+        "react-radio-group": "^3.0.3",
+        "semantic-ui-react": "^0.88.0"
+    },
+    "browserslist": [
+        "last 2 versions",
+        "not ie < 11",
+        "not dead"
+    ]
+}
