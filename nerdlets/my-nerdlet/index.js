@@ -1,10 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NerdGraphQuery, Spinner, TableChart, NrqlQuery } from 'nr1';
+import { NerdGraphQuery } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
-import { Icon, Table, Menu } from 'semantic-ui-react'
+import { Icon, Table, Menu, Button } from 'semantic-ui-react'
 import gql from 'graphql-tag';
-import SortableTbl from 'react-sort-search-table';
 
 export default class MyNerdlet extends React.Component {
     static propTypes = {
@@ -25,11 +24,18 @@ export default class MyNerdlet extends React.Component {
             allStorageSamples: [],
             accounts: [],
             accountsFinished: 0,
-            utilThreshold: 0
+            utilThreshold: 0,
+            searched: [],
+            accountNameInput: "",
+            serverNameInput: "",
+            mountPointNameInput: "",
 
         };
 
         this.queryStorage = this.queryStorage.bind(this)
+        this.renderTable = this.renderTable.bind(this)
+        this.searchTable = this.searchTable.bind(this)
+        this.handleUtilThreshold = this.handleUtilThreshold.bind(this)
 
     }
 
@@ -138,20 +144,79 @@ export default class MyNerdlet extends React.Component {
 
     }
 
+    handleUtilThreshold(utilThreshold) {
+        this.setState({utilThreshold});
+    }
+
+    async searchTable(e){
+        console.log(e.target.id, e.target.value)
+
+        if(e.target.value != ""){
+            await this.setState({[e.target.id]:e.target.value})
+        }else{
+            await this.setState({[e.target.id]:""})
+        }
+
+        // || this.state.utilThreshold > 0
+        if(this.state.accountNameInput != "" || this.state.serverNameInput != "" || this.state.mountPointNameInput != ""){
+            let searched = this.state.allStorageSamples
+
+            searched = searched.filter( (aName) => aName.accountName.toLowerCase().includes(this.state.accountNameInput) )
+            searched = searched.filter( (aName) => aName.facet[0].toLowerCase().includes(this.state.serverNameInput) )
+            searched = searched.filter( (aName) => aName.facet[1].toLowerCase().includes(this.state.mountPointNameInput) )
+            //searched = searched.filter( handleUtilThreshold(this.state.utilThreshold) )
+            this.setState({searched:searched})
+            console.log("setting search: ",searched)
+
+        }
+
+        if(this.state.accountNameInput == "" && this.state.serverNameInput == "" && this.state.mountPointNameInput == "" ){
+            console.log("resetting all search fields")
+            this.setState({"searched":this.state.allStorageSamples})
+        }
+    }
+
     // create the output table
     renderTable(mountPoints){
+
+
         return (
-            <Table celled>
+            <Table celled id="myTable">
+
                 <Table.Header>
+
+                <tr>
+                    <td>
+
+                        <input type="text" id="accountNameInput" onChange={this.searchTable} value={this.state.accountNameInput} placeholder="Search Sub-Account Name..." title="Sub-Account Name"></input>
+                        <input type="text" id="serverNameInput" onChange={this.searchTable}  value={this.state.serverNameInput} placeholder="Search Server Name..." title="Server Name"></input>
+                        <input type="text" id="mountPointNameInput" onChange={this.searchTable}  value={this.state.mountPointNameInput} placeholder="Search Mount Point Name..." title="Mount Point Name"></input>
+                        { /* <input type="text" id="utilPercentInput" onChange={this.searchTable} placeholder="Search Utilization Percent..." title="Utilization Percent"></input> */}
+                        { /* <input type="range"  id="utilPercentInput" max="100" step="1" value={this.state.utilThreshold} onChange={(e)=>this.setState({utilThreshold: e.target.value})} ></input> */}
+
+                        { /* <Menu id="utilPercentInput">
+                            <Menu.Item>Utilization Threshold:</Menu.Item>
+                            <Menu.Item><input type='range' max='100' step='1' onChange={this.handleUtilThreshold} value={this.state.utilThreshold}></input></Menu.Item>
+                            <Menu.Item>{this.state.utilThreshold}</Menu.Item>
+                        </Menu> */ }
+
+                        <Button onClick={()=>this.setState({"searched":[],"accountNameInput":"",serverNameInput:"",mountPointNameInput:""})}>Reset Search</Button>
+
+                    </td>
+                </tr>
+
                     <Table.Row>
-                        <Table.HeaderCell>ACCOUNT</Table.HeaderCell>
+                        <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
                         <Table.HeaderCell>SERVER</Table.HeaderCell>
                         <Table.HeaderCell>MOUNT POINT</Table.HeaderCell>
                         <Table.HeaderCell>UTILIZATION %</Table.HeaderCell>
                     </Table.Row>
+
                 </Table.Header>
 
                 <Table.Body>
+
+
                     {
                         mountPoints.map((mp, i)=>{
 
@@ -175,6 +240,8 @@ export default class MyNerdlet extends React.Component {
 
     render() {
 
+        let mountPoints = this.state.searched.length > 0 ? this.state.searched : this.state.allStorageSamples
+
         // output the individual payloads to console
         //console.log(this.state.allStorageSamples)
 
@@ -196,7 +263,6 @@ export default class MyNerdlet extends React.Component {
 
                 <div className='progress'>
                     { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0 ?
-                        //<Spinner type={Spinner.TYPE.INLINE} size="20px"/>
                         <Icon loading name='sync' size='large' color='green'/>
                         :
                         ""
@@ -205,15 +271,7 @@ export default class MyNerdlet extends React.Component {
 
                 </div>
 
-                <div>
-                    <Menu style={{marginBottom:"0px", marginTop:"5px", textAlign:"center"}}>
-                        <Menu.Item>Utilization Threshold:</Menu.Item>
-                        <Menu.Item><input type='range' max='100' step='1' value={this.state.utilThreshold} onChange={(e)=>this.setState({utilThreshold: e.target.value})} style={{width:"100%"}}/></Menu.Item>
-                        <Menu.Item>{this.state.utilThreshold}</Menu.Item>
-                    </Menu>
-                </div>
-
-                {this.renderTable(this.state.allStorageSamples)}
+                {this.renderTable(mountPoints)}
 
             </div>
 

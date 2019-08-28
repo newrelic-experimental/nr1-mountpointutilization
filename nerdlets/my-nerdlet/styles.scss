@@ -46,3 +46,77 @@ label {
     width: 100%;
     height: 300px;
 }
+
+// searchable table data
+* {
+    box-sizing: border-box;
+}
+
+#accountNameInput {
+    width: 25%;
+    font-size: 16px;
+    padding: 12px 12px 12px 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+}
+
+#serverNameInput {
+    width: 25%;
+    font-size: 16px;
+    padding: 12px 12px 12px 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+}
+
+#mountPointNameInput {
+    width: 25%;
+    font-size: 16px;
+    padding: 12px 12px 12px 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+}
+
+
+#utilPercentInput {
+    width: 25%;
+    font-size: 16px;
+    padding: 12px 12px 12px 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
+    //margin-top: 5px;
+    text-Align: "center";
+}
+
+/*
+#myTable {
+    border: 3px solid #000000;
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    font-family: Arial;
+}
+
+#myTable td, #myTable th {
+    border: 1px solid #000000;
+    padding: 5px 4px;
+}
+
+#myTable tbody td {
+    font-size: 13px;
+}
+
+#myTable thead {
+    background: #CFCFCF;
+    background: -moz-linear-gradient(top, #dbdbdb 0%, #d3d3d3 66%, #CFCFCF 100%);
+    background: -webkit-linear-gradient(top, #dbdbdb 0%, #d3d3d3 66%, #CFCFCF 100%);
+    background: linear-gradient(to bottom, #dbdbdb 0%, #d3d3d3 66%, #CFCFCF 100%);
+    border-bottom: 3px solid #000000;
+}
+
+#myTable thead th {
+    font-size: 15px;
+    font-weight: bold;
+    color: #000000;
+    text-align: left;
+}
+*/
