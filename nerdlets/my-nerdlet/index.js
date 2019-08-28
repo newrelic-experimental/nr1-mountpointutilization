@@ -4,6 +4,7 @@ import { NerdGraphQuery, Spinner, TableChart, NrqlQuery } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
 import { Icon, Table, Menu } from 'semantic-ui-react'
 import gql from 'graphql-tag';
+import SortableTbl from 'react-sort-search-table';
 
 export default class MyNerdlet extends React.Component {
     static propTypes = {
@@ -136,7 +137,6 @@ export default class MyNerdlet extends React.Component {
         } )
 
     }
-
 
     // create the output table
     renderTable(mountPoints){
