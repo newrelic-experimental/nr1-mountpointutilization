@@ -39,7 +39,7 @@ export default class MyNerdlet extends React.Component {
         };
 
         // bind all event handlers
-        this.queryStorage = this.queryStorage.bind( this )
+        this.handleQueryStorage = this.handleQueryStorage.bind( this )
         this.renderTable = this.renderTable.bind( this )
         this.handleSearchTable = this.handleSearchTable.bind( this )
         this.handleUtilThreshold = this.handleUtilThreshold.bind( this )
@@ -68,7 +68,7 @@ export default class MyNerdlet extends React.Component {
     }
 
     // function to query NRQL via graphQL; triggerd on selection of radio button in render
-    async queryStorage(e){
+    async handleQueryStorage(e){
 
         // start by clearing out any orphaned value
         let whereClause = ""
@@ -452,7 +452,7 @@ export default class MyNerdlet extends React.Component {
                     <RadioGroup
                         className='radio-group'
                         name="dba-team"
-                        onClick={ this.queryStorage }>
+                        onChange={ this.handleQueryStorage }>
 
                         <div className='radio-option'>
                             <Radio value="db2" />DB2 TEAM
