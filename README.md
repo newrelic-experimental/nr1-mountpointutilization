@@ -6,9 +6,11 @@
 
 ## Usage
 
-nr1-mountpointutilization-nerdpack provides a centralized view of mount point utilization statistics collected across all the sub-accounts in your organization
+nr1-mountpointutilization-nerdpack provides a centralized view of mount point utilization statistics collected across all the sub-accounts in your organization.
 
-*TO-DO: add redacted screenshot...*
+The intent of this nerdpack is to give an introduction to the creation of nerdlets by showcasing a range of common patterns and provide heavily-commented source files to assist engineers who are not as familiar with React.js
+
+*<<< TO-DO: add redacted screenshot... >>>*
 <!--
 ![Screenshot #1](screenshots/screenshot_01.png)
 -->
