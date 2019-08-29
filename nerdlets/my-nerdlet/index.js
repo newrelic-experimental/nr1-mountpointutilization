@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NerdGraphQuery } from 'nr1';
+import { NerdGraphQuery, navigation } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
 import { Icon, Table, Button } from 'semantic-ui-react'
 import gql from 'graphql-tag';
@@ -37,6 +37,7 @@ export default class MyNerdlet extends React.Component {
         this.renderTable = this.renderTable.bind(this)
         this.searchTable = this.searchTable.bind(this)
         this.handleUtilThreshold = this.handleUtilThreshold.bind(this)
+        this.handleStackEntity = this.handleStackEntity.bind(this)
 
     }
 
@@ -193,6 +194,23 @@ export default class MyNerdlet extends React.Component {
         }
     }
 
+    handleStackEntity(e) {
+
+        if(e != ""){
+            const entity = {
+
+                guid: e,
+                domain: 'INFRA',
+                type: 'HOST',
+
+            };
+console.log(entity)
+            navigation.openStackedEntity(entity);
+        }
+
+
+    }
+
     // create the output table
     renderTable(mountPoints){
 
@@ -279,7 +297,7 @@ export default class MyNerdlet extends React.Component {
                             return (
                             <Table.Row key={i}>
                                 <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
-                                <Table.Cell><a href={serverUrl} target="_blank">{mp.facet[0]}</a></Table.Cell>
+                                <Table.Cell onClick={ () => this.handleStackEntity(mp.facet[2]) }>{mp.facet[0]}</Table.Cell>
                                 <Table.Cell>{mp.facet[1]}</Table.Cell>
                                 <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
                             </Table.Row>
