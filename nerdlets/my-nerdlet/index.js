@@ -1,3 +1,4 @@
+// intro to ES6 imports: https://appdividend.com/2019/01/23/javascript-import-statement-tutorial-with-example/
 import React from 'react';
 import PropTypes from 'prop-types';
 import { NerdGraphQuery, navigation } from 'nr1';
@@ -13,9 +14,13 @@ export default class MyNerdlet extends React.Component {
         height: PropTypes.number,
     };
 
-    constructor(props) {
+    // build your constructor to initialize state and bind methods
+    // ref: https://reactjs.org/docs/react-component.html#constructor
+    constructor( props ) {
 
-        super(props);
+        super( props );
+
+        // set the initial states
         this.state = {
 
             serverName: null,
@@ -24,59 +29,54 @@ export default class MyNerdlet extends React.Component {
             allStorageSamples: [],
             accounts: [],
             accountsFinished: 0,
-            utilThreshold: 0, //change this to change the default starting threshold for the table
+            utilThreshold: 0, // the default starting utilization threshold for the table
             searched: [],
             accountNameInput: "",
             serverNameInput: "",
             mountPointNameInput: "",
-            searchStatus: "disabled",
+            searchStatus: "disabled", // this is used to suppress the filtering options until the table is rendered
 
         };
 
-        this.queryStorage = this.queryStorage.bind(this)
-        this.renderTable = this.renderTable.bind(this)
-        this.searchTable = this.searchTable.bind(this)
-        this.handleUtilThreshold = this.handleUtilThreshold.bind(this)
-        this.handleStackEntity = this.handleStackEntity.bind(this)
+        // bind all event handlers
+        this.handleQueryStorage = this.handleQueryStorage.bind( this )
+        this.renderTable = this.renderTable.bind( this )
+        this.handleSearchTable = this.handleSearchTable.bind( this )
+        this.handleUtilThreshold = this.handleUtilThreshold.bind( this )
+        this.handleStackEntity = this.handleStackEntity.bind( this )
 
-    }
-
-    // build a custom logging method
-    nerdLog(msg){
-
-        if(this.state.enableNerdLog){
-
-            /*eslint no-console: ["error", { allow: ["warn", "error"] }] */
-            console.warn(msg);
-
-        }
     }
 
     // use the componentDidMount method to set state before render
+    // ref: https://reactjs.org/docs/react-component.html#componentdidmount
+    // intro to javascript 'promises': https://javascript.info/promise-basics
+    // intro to javascript 'async/await': https://javascript.info/async-await
     async componentDidMount(){
 
         // built the graphQL query to iterate all accounts
-        const accountsQuery = gql`{actor { accounts { id name } } }`
+        //ref: https://api.newrelic.com/graphiql?#query=%7B%0A%20%20actor%20%7B%0A%20%20%20%20accounts%20%7B%0A%20%20%20%20%20%20id%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A
+        const accountsQuery = gql`{ actor { accounts { id name } } }`
 
-        // query accounts and set hte 'accounts' variable
-        this.nerdLog("fetching newrelic accounts")
-        let results = await NerdGraphQuery.query({query: accountsQuery})
+        // query accounts and set the 'accounts' variable
+        let results = await NerdGraphQuery.query( { query: accountsQuery } )
+
         // validate NRQL results and handle NULLs
         // http://web.archive.org/web/20161108071447/http://blog.osteele.com/posts/2007/12/cheap-monads/
-        let accounts = (((results || {}).data || {}).actor || {}).accounts || []
-        this.setState({accounts: accounts})
+        let accounts = ( ( ( results || {} ).data || {} ).actor || {} ).accounts || []
+        this.setState( { accounts: accounts } )
 
     }
 
-    // method to update the where clause based on the selection on the radio group
-    async queryStorage(d){
+    // function to query NRQL via graphQL; triggerd on selection of radio button in render
+    async handleQueryStorage(e){
 
         // start by clearing out any orphaned value
         let whereClause = ""
 
         // set the whereClause value based on the selected radio button
-        switch(d){
+        switch(e){
 
+            // standard mounts points in use per DBA team
             case "db2":
                 whereClause = "WHERE (mountPoint = '/data' OR mountPoint LIKE '%/db2%')"
                 break;
@@ -91,15 +91,15 @@ export default class MyNerdlet extends React.Component {
 
         }
 
-        // build the base-query to be used for all the table
-        let tableNrql = `SELECT max(diskUsedPercent) AS 'utilization' FROM StorageSample ${whereClause} FACET hostname, mountPoint, entityGuid  LIMIT MAX`;
+        // build the base-query to be used for all results
+        let tableNrql = `SELECT max(diskUsedPercent) AS 'utilization' FROM StorageSample ${ whereClause } FACET hostname, mountPoint, entityGuid  LIMIT MAX`;
 
-        // query the storage data for all accounts
-        const getInstanceData = (accountId) => {
+        // build a query for the storage data of an account
+        const getStorageData = (accountId) => {
             return gql`{
                 actor {
-                account(id: ${accountId}) {
-                    storage: nrql(query: "${tableNrql}", timeout: 30000) {
+                account(id: ${ accountId }) {
+                    storage: nrql(query: "${ tableNrql }", timeout: 30000) {
                     results
                     }
                 }
@@ -107,96 +107,142 @@ export default class MyNerdlet extends React.Component {
             }`
             }
 
-        await this.setState({allStorageSamples: [], accountsFinished: 0});
+        // empty the allStorageSamples and accountsFinished to start the progress counter
+        await this.setState( { allStorageSamples: [], accountsFinished: 0 } );
 
+        // iterate through all of the objects in 'accounts', and query for the storage details in each
         this.state.accounts.forEach(async (account, i) => {
 
-            let results = await NerdGraphQuery.query({query: getInstanceData(account.id)})
-            if(results.errors){
+            // assign the return from grahpQL to 'results'
+            let results = await NerdGraphQuery.query( { query: getStorageData( account.id ) } )
 
-                this.nerdLog(results.errors)
+            // create a temp placeholder that we'll use to manipulate our return
+            let tempStorage = this.state.allStorageSamples
 
-            }else{
+            // validate NRQL results and handle NULLs
+            // http://web.archive.org/web/20161108071447/http://blog.osteele.com/posts/2007/12/cheap-monads/
+            let storageSamples = ( ( ( ( ( results || {} ).data || {} ).actor || {} ).account || {} ).storage || {} ).results || []
 
-                let tempStorage = this.state.allStorageSamples
-                // validate NRQL results and handle NULLs
-                // http://web.archive.org/web/20161108071447/http://blog.osteele.com/posts/2007/12/cheap-monads/
-                let storageSamples = (((((results || {}).data || {}).actor || {}).account || {}).storage || {}).results || []
-                storageSamples.forEach((sample)=>{
-                    console.log(sample)
-                    sample.accountId = account.id
-                    sample.accountName = account.name
-                    tempStorage.push(sample)
-                })
+            // iterate through the results and append the objects with account details
+            storageSamples.forEach( ( sample ) => {
+                // write to console for troubleshooting
+                console.log( sample )
 
-                // create a progress counter
-                let accountsFin = this.state.accountsFinished
-                accountsFin = accountsFin+1
-                this.setState({allStorageSamples: tempStorage, accountsFinished: accountsFin, searchStatus: ""})
+                // append the account details
+                sample.accountId = account.id
+                sample.accountName = account.name
 
-            }
+                // add the massaged samples into the tempStorage object
+                tempStorage.push( sample )
+            })
+
+            // create a progress counter
+            let accountsFin = this.state.accountsFinished
+
+            // increment +1 on each loop
+            accountsFin = accountsFin+1
+
+            // set the state of allStorageSamples == our massaged data object; accountsFinished == the +1 counter; and empty the searchStatus state*
+            // * this is used to return a full table when we clear the search
+            this.setState( { allStorageSamples: tempStorage, accountsFinished: accountsFin, searchStatus: "" } )
+
         } )
 
     }
 
+    // function to handle moving the utilization threshold slider
     handleUtilThreshold(e) {
 
-        console.log(e.target.id, e.target.value)
+        // start by waiting until the slider gives us a value
+        if( e.target.value !== null && e.target.value !== undefined ){
 
-        if(e.target.value !== null && e.target.value !== undefined){
-
-            this.setState({utilThreshold: e.target.value})
-            console.log("util slider has been moved: ",e.target.id," is now = ",e.target.value)
+            // set the utilThreshold == the slider value
+            this.setState( { utilThreshold: e.target.value } )
 
         }else{
 
-            this.setState({utilThreshold :""})
-            console.log("util slider was null or undefined, setting to blank")
+            // if the slider isn't returning a value; set it to empty* and log a console message
+            // * note this is not the same as NULL, which indicates the purposeful absence of any value ('empty' < "" > is in itself a value)
+            this.setState( { utilThreshold : "" } )
+            console.log("util slider was null or undefined, setting to empty")
 
         }
 
-        if(this.state.utilThreshold > 0){
-            let searched = this.state.allStorageSamples
+        // check if the utilThreshold is above 0, and then filter our results
+        if( this.state.utilThreshold > 0 ){
 
-            searched = searched.filter( (aName) => aName.utilization > this.state.utilThreshold )
-            console.log("searching for data where filter( ",this.state.utilThreshold," > ",e.target.value)
-            this.setState({searched:searched})
-            console.log("setting search: ",searched)
+            // assign the contents of our unfiltered data to 'searchResults'
+            let searchResults = this.state.allStorageSamples
+
+            // filter on 'searched', finding all values where the 'allStorageSamples' data is above the threshold
+            searchResults = searchResults.filter( ( utilSample ) => utilSample.utilization > this.state.utilThreshold )
+
+            // set the contents of 'searched' to the results post-filtering
+            this.setState( { searched:searchResults } )
 
         }
 
     }
 
-    async searchTable(e){
-        console.log(e.target.id, e.target.value)
+    // function to handle the search input boxes
+    async handleSearchTable(e){
 
-        if(e.target.value != ""){
-            await this.setState({[e.target.id]:e.target.value})
+        // check for contents, and set the state relative to the input box to the value on input
+        // note using the syntax [e.target.id] allows a dynamic match from the input box id to the literal state name from constructor()
+        if( e.target.value != "" ){
+
+            await this.setState( { [ e.target.id ]:e.target.value } )
+
         }else{
-            await this.setState({[e.target.id]:""})
-        }
 
-        // || this.state.utilThreshold > 0
-        if(this.state.accountNameInput != "" || this.state.serverNameInput != "" || this.state.mountPointNameInput != "" || this.state.utilThreshold != ""){
-            let searched = this.state.allStorageSamples
-
-            searched = searched.filter( (aName) => aName.accountName.toLowerCase().includes(this.state.accountNameInput) )
-            searched = searched.filter( (aName) => aName.facet[0].toLowerCase().includes(this.state.serverNameInput) )
-            searched = searched.filter( (aName) => aName.facet[1].toLowerCase().includes(this.state.mountPointNameInput) )
-            this.setState({searched:searched})
-            console.log("setting search: ",searched, this.state)
+            // if the input box is empty, let's make sure the state matches
+            await this.setState( { [ e.target.id ]:"" } )
 
         }
 
-        if(this.state.accountNameInput == "" && this.state.serverNameInput == "" && this.state.mountPointNameInput == "" ){
-            console.log("resetting all search fields")
-            this.setState({"searched":this.state.allStorageSamples})
+        // if any of the input boxes or the util slider are in use, let's filter the results
+        // note the double pipes ( || ) are equivalent to the "OR" operand
+        if( this.state.accountNameInput != "" ||
+            this.state.serverNameInput != "" ||
+            this.state.mountPointNameInput != "" ||
+            this.state.utilThreshold != "" ){
+
+                // assign the contents of our unfiltered data to 'searchedResults'
+                let searchResults = this.state.allStorageSamples
+
+                // filter on 'searched', finding all values where the 'allStorageSamples' data matches the search string
+                searchResults = searchResults.filter( ( accountSample ) => accountSample.accountName.toLowerCase().includes( this.state.accountNameInput ) )
+                searchResults = searchResults.filter( ( serverSample ) => serverSample.facet[0].toLowerCase().includes( this.state.serverNameInput ) )
+                searchResults = searchResults.filter( ( mountPointSample ) => mountPointSample.facet[1].toLowerCase().includes( this.state.mountPointNameInput ) )
+
+                // set the contents of 'searched' to the results post-filtering
+                this.setState( { searched:searchResults } )
+
         }
+
+        // if all search boxes are empty, reset the table to default
+        // note the double ampersands ( && ) are equivalent to the 'AND' operand
+        if( this.state.accountNameInput == "" &&
+            this.state.serverNameInput == "" &&
+            this.state.mountPointNameInput == "" ){
+
+                // log to console for troubleshooting
+                console.log( "input boxes found empty, resetting all search fields" )
+
+                // set the contents of 'searched' the the results pre-filtering
+                this.setState( { searched :this.state.allStorageSamples } )
+
+        }
+
     }
 
+    // function to handle the onClick event for server names in table
     handleStackEntity(e) {
 
-        if(e != ""){
+        // make sure our table cell isn't empty
+        if( e != "" ){
+
+            // build an object to pass into our method
             const entity = {
 
                 guid: e,
@@ -204,77 +250,87 @@ export default class MyNerdlet extends React.Component {
                 type: 'HOST',
 
             };
-console.log(entity)
-            navigation.openStackedEntity(entity);
-        }
 
+            // execute the openStackedEntity from the nr1 library to open a side card with server details
+            navigation.openStackedEntity(entity);
+
+        }
 
     }
 
-    // create the output table
-    renderTable(mountPoints){
-
+    // function to create the output table in the render() method
+    renderTable(e){
 
         return (
             <Table celled id="myTable">
 
                 <Table.Header>
 
-                <Table.Row>
-                    <Table.Cell>
+                    <Table.Row>
 
-                        <input
-                            type="text"
-                            id="accountNameInput"
-                            onChange={this.searchTable}
-                            value={this.state.accountNameInput}
-                            placeholder="Search Sub-Account Name..."
-                            title="Sub-Account Name"
-                            disabled={this.state.searchStatus}>
-                        </input>
-                        <input
-                            type="text"
-                            id="serverNameInput"
-                            onChange={this.searchTable}
-                            value={this.state.serverNameInput}
-                            placeholder="Search Server Name..."
-                            disabled={this.state.searchStatus}
-                            title="Server Name">
-                        </input>
-                        <input
-                            type="text"
-                            id="mountPointNameInput"
-                            onChange={this.searchTable}
-                            value={this.state.mountPointNameInput}
-                            placeholder="Search Mount Point Name..."
-                            disabled={this.state.searchStatus}
-                            title="Mount Point Name">
-                        </input>
+                        <Table.Cell>
 
-                        <label>
                             <input
-                                id="utilSlider"
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={this.state.utilThreshold}
-                                onChange={this.handleUtilThreshold}
-                                step="1"
-                                disabled={this.state.searchStatus}>
+                                type="text"
+                                id="accountNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.accountNameInput }
+                                placeholder="Search Sub-Account Name..."
+                                title="Sub-Account Name"
+                                disabled={ this.state.searchStatus }>
                             </input>
-                        {this.state.utilThreshold}
-                        </label>
 
-                        <Button onClick={()=>this.setState({
-                            searched:[],
-                            accountNameInput:"",
-                            serverNameInput:"",
-                            mountPointNameInput:"",
-                            utilThreshold: 0
-                            })}>Reset Search</Button>
+                            <input
+                                type="text"
+                                id="serverNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.serverNameInput }
+                                placeholder="Search Server Name..."
+                                disabled={ this.state.searchStatus }
+                                title="Server Name">
+                            </input>
 
-                    </Table.Cell>
-                </Table.Row>
+                            <input
+                                type="text"
+                                id="mountPointNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.mountPointNameInput }
+                                placeholder="Search Mount Point Name..."
+                                disabled={ this.state.searchStatus }
+                                title="Mount Point Name">
+                            </input>
+
+                            <label>
+
+                                <input
+                                    id="utilSlider"
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={ this.state.utilThreshold }
+                                    onChange={ this.handleUtilThreshold }
+                                    step="1"
+                                    disabled={ this.state.searchStatus }>
+                                </input>
+
+                                { this.state.utilThreshold }
+
+                            </label>
+
+                            <Button
+                                onClick={()=>this.setState({
+                                    searched:[],
+                                    accountNameInput:"",
+                                    serverNameInput:"",
+                                    mountPointNameInput:"",
+                                    utilThreshold: 0
+                                    })}>
+                                Reset Search
+                            </Button>
+
+                        </Table.Cell>
+
+                    </Table.Row>
 
                     <Table.Row>
                         <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
@@ -287,62 +343,90 @@ console.log(entity)
 
                 <Table.Body>
 
-
+                    { /*  iterate through all of the results, adding a single row for each */ }
                     {
-                        mountPoints.map((mp, i)=>{
+                        e.map((mp, i)=>{
 
+                            { /* build a URL to take you to the infra dashboard for the select sub-account */ }
                             let accountUrl = `https://infrastructure.newrelic.com/accounts/${mp.accountId}`
-                            let serverUrl = `https://one.newrelic.com/redirect/entity/${mp.facet[2]}`
 
                             return (
-                            <Table.Row key={i}>
-                                <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
-                                <Table.Cell onClick={ () => this.handleStackEntity(mp.facet[2]) }>{mp.facet[0]}</Table.Cell>
-                                <Table.Cell>{mp.facet[1]}</Table.Cell>
-                                <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
-                            </Table.Row>
+
+                                <Table.Row key={i}>
+
+                                    <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
+                                    <Table.Cell onClick={ () => this.handleStackEntity(mp.facet[2]) }>{mp.facet[0]}</Table.Cell>
+                                    <Table.Cell>{mp.facet[1]}</Table.Cell>
+                                    <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
+
+                                </Table.Row>
+
                             )
+
                         })
+
                     }
+
                 </Table.Body>
+
             </Table>
+
         )
+
     }
 
     render() {
 
-        let mountPoints =  this.state.accountNameInput != "" || this.state.serverNameInput !="" || this.state.serverNameInput !=""  || this.state.utilThreshold > 0 ? this.state.searched : this.state.allStorageSamples
-
-        // output the individual payloads to console
-        //console.log(this.state.allStorageSamples)
+        // if any of our fitlers are in use, populate the table with the results of the search, otherwise give us the full table
+        let e =  this.state.accountNameInput != "" ||
+            this.state.serverNameInput !="" ||
+            this.state.serverNameInput !=""  ||
+            this.state.utilThreshold > 0
+            ?
+            this.state.searched
+            :
+            this.state.allStorageSamples
 
         return (
 
             <div>
-                {/* build a radio group from react-radio-group with buttons mapped to the DBA teams */}
+
+                { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
                 <RadioGroup
                     className='radio-group'
                     name="dba-team"
-                    onChange={this.queryStorage}>
+                    onChange={ this.handleQueryStorage }>
 
                     <div className='radio-option'>
                         <Radio value="db2" />DB2 TEAM
                         <Radio value="sql" />MSSQL TEAM
                         <Radio value="oracle" />ORACLE TEAM
                     </div>
+
                 </RadioGroup>
 
+                { /* build a progress indicator */ }
                 <div className='progress'>
-                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0 ?
-                        <Icon loading name='sync' size='large' color='green'/>
+
+                    { /* keep the spinner spinning until we're done iterating through accounts */ }
+                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
+                        ?
+                        <Icon
+                            loading name='sync'
+                            size='large'
+                            color='green'>
+                        </Icon>
                         :
                         ""
                     }
-                    {this.state.accountsFinished + "/" + this.state.accounts.length}
+
+                    { /* build and X/Y counter display */ }
+                    { this.state.accountsFinished + "/" + this.state.accounts.length }
 
                 </div>
 
-                {this.renderTable(mountPoints)}
+                { /* execute the renderTable method */ }
+                { this.renderTable(e) }
 
             </div>
 
