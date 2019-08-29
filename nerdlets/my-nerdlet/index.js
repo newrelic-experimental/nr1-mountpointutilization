@@ -1,7 +1,7 @@
 // intro to ES6 imports: https://appdividend.com/2019/01/23/javascript-import-statement-tutorial-with-example/
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NerdGraphQuery, navigation } from 'nr1';
+import { NerdGraphQuery, navigation, Stack, StackItem } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
 import { Icon, Table, Button } from 'semantic-ui-react'
 import gql from 'graphql-tag';
@@ -39,7 +39,7 @@ export default class MyNerdlet extends React.Component {
         };
 
         // bind all event handlers
-        this.handleQueryStorage = this.handleQueryStorage.bind( this )
+        this.queryStorage = this.queryStorage.bind( this )
         this.renderTable = this.renderTable.bind( this )
         this.handleSearchTable = this.handleSearchTable.bind( this )
         this.handleUtilThreshold = this.handleUtilThreshold.bind( this )
@@ -68,7 +68,7 @@ export default class MyNerdlet extends React.Component {
     }
 
     // function to query NRQL via graphQL; triggerd on selection of radio button in render
-    async handleQueryStorage(e){
+    async queryStorage(e){
 
         // start by clearing out any orphaned value
         let whereClause = ""
@@ -126,7 +126,7 @@ export default class MyNerdlet extends React.Component {
             // iterate through the results and append the objects with account details
             storageSamples.forEach( ( sample ) => {
                 // write to console for troubleshooting
-                console.log( sample )
+                //console.log( sample )
 
                 // append the account details
                 sample.accountId = account.id
@@ -144,7 +144,15 @@ export default class MyNerdlet extends React.Component {
 
             // set the state of allStorageSamples == our massaged data object; accountsFinished == the +1 counter; and empty the searchStatus state*
             // * this is used to return a full table when we clear the search
-            this.setState( { allStorageSamples: tempStorage, accountsFinished: accountsFin, searchStatus: "" } )
+            this.setState( {
+                    allStorageSamples: tempStorage,
+                    accountsFinished: accountsFin,
+                    searchStatus: "",
+                    searched:[],
+                    accountNameInput:"",
+                    serverNameInput:"",
+                    mountPointNameInput:"",
+                    utilThreshold: 0} )
 
         } )
 
@@ -206,7 +214,7 @@ export default class MyNerdlet extends React.Component {
             this.state.serverNameInput != "" ||
             this.state.mountPointNameInput != "" ||
             this.state.utilThreshold != "" ){
-
+                console.log("A: ",this.state.accountNameInput,"S: ",this.state.serverNameInput,"M: ",this.state.mountPointNameInput,"U: ",this.stateUtilThreshold)
                 // assign the contents of our unfiltered data to 'searchedResults'
                 let searchResults = this.state.allStorageSamples
 
@@ -262,75 +270,9 @@ export default class MyNerdlet extends React.Component {
     renderTable(e){
 
         return (
-            <Table celled id="myTable">
+            <Table celled striped id="myTable">
 
-                <Table.Header>
-
-                    <Table.Row>
-
-                        <Table.Cell>
-
-                            <input
-                                type="text"
-                                id="accountNameInput"
-                                onChange={ this.handleSearchTable }
-                                value={ this.state.accountNameInput }
-                                placeholder="Search Sub-Account Name..."
-                                title="Sub-Account Name"
-                                disabled={ this.state.searchStatus }>
-                            </input>
-
-                            <input
-                                type="text"
-                                id="serverNameInput"
-                                onChange={ this.handleSearchTable }
-                                value={ this.state.serverNameInput }
-                                placeholder="Search Server Name..."
-                                disabled={ this.state.searchStatus }
-                                title="Server Name">
-                            </input>
-
-                            <input
-                                type="text"
-                                id="mountPointNameInput"
-                                onChange={ this.handleSearchTable }
-                                value={ this.state.mountPointNameInput }
-                                placeholder="Search Mount Point Name..."
-                                disabled={ this.state.searchStatus }
-                                title="Mount Point Name">
-                            </input>
-
-                            <label>
-
-                                <input
-                                    id="utilSlider"
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={ this.state.utilThreshold }
-                                    onChange={ this.handleUtilThreshold }
-                                    step="1"
-                                    disabled={ this.state.searchStatus }>
-                                </input>
-
-                                { this.state.utilThreshold }
-
-                            </label>
-
-                            <Button
-                                onClick={()=>this.setState({
-                                    searched:[],
-                                    accountNameInput:"",
-                                    serverNameInput:"",
-                                    mountPointNameInput:"",
-                                    utilThreshold: 0
-                                    })}>
-                                Reset Search
-                            </Button>
-
-                        </Table.Cell>
-
-                    </Table.Row>
+                <Table.Header className="tableHeader">
 
                     <Table.Row>
                         <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
@@ -341,7 +283,7 @@ export default class MyNerdlet extends React.Component {
 
                 </Table.Header>
 
-                <Table.Body>
+                <Table.Body className="tableContents">
 
                     { /*  iterate through all of the results, adding a single row for each */ }
                     {
@@ -355,7 +297,9 @@ export default class MyNerdlet extends React.Component {
                                 <Table.Row key={i}>
 
                                     <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
-                                    <Table.Cell onClick={ () => this.handleStackEntity(mp.facet[2]) }>{mp.facet[0]}</Table.Cell>
+                                    <Table.Cell className="hostContents" onClick={ () => this.handleStackEntity(mp.facet[2]) }>
+                                        <Icon name='chart area' /> {mp.facet[0]}
+                                    </Table.Cell>
                                     <Table.Cell>{mp.facet[1]}</Table.Cell>
                                     <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
 
@@ -375,12 +319,121 @@ export default class MyNerdlet extends React.Component {
 
     }
 
+    renderHeader() {
+
+        return(
+
+            <Stack
+                alignmentType={Stack.ALIGNMENT_TYPE.CENTER}
+
+                >
+
+                <StackItem grow>
+
+                    <Stack
+                        gapType={Stack.GAP_TYPE.LOOSE}
+                        distributionType={Stack.DISTRIBUTION_TYPE.FILL}>
+
+                        <StackItem
+                            >
+                            <input
+                                type="text"
+                                id="accountNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.accountNameInput }
+                                placeholder="Search Sub-Account Name..."
+                                title="Sub-Account Name"
+                                disabled={ this.state.searchStatus }>
+                            </input>
+                        </StackItem>
+
+                        <StackItem>
+                            <input
+                                type="text"
+                                id="serverNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.serverNameInput }
+                                placeholder="Search Server Name..."
+                                disabled={ this.state.searchStatus }
+                                title="Server Name">
+                            </input>
+                        </StackItem>
+
+                        <StackItem>
+                            <input
+                                type="text"
+                                id="mountPointNameInput"
+                                onChange={ this.handleSearchTable }
+                                value={ this.state.mountPointNameInput }
+                                placeholder="Search Mount Point Name..."
+                                disabled={ this.state.searchStatus }
+                                title="Mount Point Name">
+                            </input>
+                        </StackItem>
+
+                        <StackItem>
+                        <label>
+
+                            <input
+                                id="utilSlider"
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={ this.state.utilThreshold }
+                                onChange={ this.handleUtilThreshold }
+                                step="1"
+                                disabled={ this.state.searchStatus }>
+                            </input>
+
+                            <span
+                                id="utilLabel">
+
+                                { this.state.utilThreshold }
+
+                            </span>
+
+                        </label>
+                    </StackItem>
+
+                    </Stack>
+
+                </StackItem>
+
+            <StackItem>
+
+                <Stack
+                    alignmentType={Stack.ALIGNMENT_TYPE.CENTER}
+                    gapType={Stack.GAP_TYPE.LOOSE}>
+
+                    <StackItem>
+                        <Button
+                            onClick={()=>this.setState({
+                                searched:[],
+                                accountNameInput:"",
+                                serverNameInput:"",
+                                mountPointNameInput:"",
+                                utilThreshold: 0
+                                })}>
+                            Reset Search
+                        </Button>
+                    </StackItem>
+
+                </Stack>
+
+            </StackItem>
+
+        </Stack>
+
+
+        )
+
+    }
     render() {
 
         // if any of our fitlers are in use, populate the table with the results of the search, otherwise give us the full table
         let e =  this.state.accountNameInput != "" ||
             this.state.serverNameInput !="" ||
-            this.state.serverNameInput !=""  ||
+            this.state.mountPointNameInput !=""  ||
             this.state.utilThreshold > 0
             ?
             this.state.searched
@@ -389,25 +442,37 @@ export default class MyNerdlet extends React.Component {
 
         return (
 
-            <div>
+            <div className="wrapper">
 
+            <Stack>
                 { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
-                <RadioGroup
-                    className='radio-group'
-                    name="dba-team"
-                    onChange={ this.handleQueryStorage }>
 
-                    <div className='radio-option'>
-                        <Radio value="db2" />DB2 TEAM
-                        <Radio value="sql" />MSSQL TEAM
-                        <Radio value="oracle" />ORACLE TEAM
+                <StackItem grow>
+
+                    <RadioGroup
+                        className='radio-group'
+                        name="dba-team"
+                        onClick={ this.queryStorage }>
+
+                        <div className='radio-option'>
+                            <Radio value="db2" />DB2 TEAM
+                            <Radio value="sql" />MSSQL TEAM
+                            <Radio value="oracle" />ORACLE TEAM
+                        </div>
+                    </RadioGroup>
+
+                </StackItem>
+
+                <StackItem>
+                    { /* build a progress indicator */ }
+                    <div className='progress'>
+
+                    { /* build and X/Y counter display */ }
+                    { this.state.accountsFinished + "/" + this.state.accounts.length }
                     </div>
+                </StackItem>
 
-                </RadioGroup>
-
-                { /* build a progress indicator */ }
-                <div className='progress'>
-
+                <StackItem>
                     { /* keep the spinner spinning until we're done iterating through accounts */ }
                     { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
                         ?
@@ -419,11 +484,11 @@ export default class MyNerdlet extends React.Component {
                         :
                         ""
                     }
+                </StackItem>
 
-                    { /* build and X/Y counter display */ }
-                    { this.state.accountsFinished + "/" + this.state.accounts.length }
+            </Stack>
 
-                </div>
+                {this.renderHeader()}
 
                 { /* execute the renderTable method */ }
                 { this.renderTable(e) }
