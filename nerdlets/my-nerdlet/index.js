@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { NerdGraphQuery } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
-import { Icon, Table, Menu, Button } from 'semantic-ui-react'
+import { Icon, Table, Button } from 'semantic-ui-react'
 import gql from 'graphql-tag';
 
 export default class MyNerdlet extends React.Component {
@@ -24,11 +24,12 @@ export default class MyNerdlet extends React.Component {
             allStorageSamples: [],
             accounts: [],
             accountsFinished: 0,
-            utilThreshold: 0,
+            utilThreshold: 0, //change this to change the default starting threshold for the table
             searched: [],
             accountNameInput: "",
             serverNameInput: "",
             mountPointNameInput: "",
+            searchStatus: "disabled",
 
         };
 
@@ -63,13 +64,6 @@ export default class MyNerdlet extends React.Component {
         // http://web.archive.org/web/20161108071447/http://blog.osteele.com/posts/2007/12/cheap-monads/
         let accounts = (((results || {}).data || {}).actor || {}).accounts || []
         this.setState({accounts: accounts})
-
-    }
-
-    //handle used with slider for utilization threshold
-    handleThreshold(e){
-
-        this.setState({ utilThreshold: e.target.value })
 
     }
 
@@ -137,15 +131,39 @@ export default class MyNerdlet extends React.Component {
                 // create a progress counter
                 let accountsFin = this.state.accountsFinished
                 accountsFin = accountsFin+1
-                this.setState({allStorageSamples: tempStorage, accountsFinished: accountsFin})
+                this.setState({allStorageSamples: tempStorage, accountsFinished: accountsFin, searchStatus: ""})
 
             }
         } )
 
     }
 
-    handleUtilThreshold(utilThreshold) {
-        this.setState({utilThreshold});
+    handleUtilThreshold(e) {
+
+        console.log(e.target.id, e.target.value)
+
+        if(e.target.value !== null && e.target.value !== undefined){
+
+            this.setState({utilThreshold: e.target.value})
+            console.log("util slider has been moved: ",e.target.id," is now = ",e.target.value)
+
+        }else{
+
+            this.setState({utilThreshold :""})
+            console.log("util slider was null or undefined, setting to blank")
+
+        }
+
+        if(this.state.utilThreshold > 0){
+            let searched = this.state.allStorageSamples
+
+            searched = searched.filter( (aName) => aName.utilization > this.state.utilThreshold )
+            console.log("searching for data where filter( ",this.state.utilThreshold," > ",e.target.value)
+            this.setState({searched:searched})
+            console.log("setting search: ",searched)
+
+        }
+
     }
 
     async searchTable(e){
@@ -158,15 +176,14 @@ export default class MyNerdlet extends React.Component {
         }
 
         // || this.state.utilThreshold > 0
-        if(this.state.accountNameInput != "" || this.state.serverNameInput != "" || this.state.mountPointNameInput != ""){
+        if(this.state.accountNameInput != "" || this.state.serverNameInput != "" || this.state.mountPointNameInput != "" || this.state.utilThreshold != ""){
             let searched = this.state.allStorageSamples
 
             searched = searched.filter( (aName) => aName.accountName.toLowerCase().includes(this.state.accountNameInput) )
             searched = searched.filter( (aName) => aName.facet[0].toLowerCase().includes(this.state.serverNameInput) )
             searched = searched.filter( (aName) => aName.facet[1].toLowerCase().includes(this.state.mountPointNameInput) )
-            //searched = searched.filter( handleUtilThreshold(this.state.utilThreshold) )
             this.setState({searched:searched})
-            console.log("setting search: ",searched)
+            console.log("setting search: ",searched, this.state)
 
         }
 
@@ -185,25 +202,61 @@ export default class MyNerdlet extends React.Component {
 
                 <Table.Header>
 
-                <tr>
-                    <td>
+                <Table.Row>
+                    <Table.Cell>
 
-                        <input type="text" id="accountNameInput" onChange={this.searchTable} value={this.state.accountNameInput} placeholder="Search Sub-Account Name..." title="Sub-Account Name"></input>
-                        <input type="text" id="serverNameInput" onChange={this.searchTable}  value={this.state.serverNameInput} placeholder="Search Server Name..." title="Server Name"></input>
-                        <input type="text" id="mountPointNameInput" onChange={this.searchTable}  value={this.state.mountPointNameInput} placeholder="Search Mount Point Name..." title="Mount Point Name"></input>
-                        { /* <input type="text" id="utilPercentInput" onChange={this.searchTable} placeholder="Search Utilization Percent..." title="Utilization Percent"></input> */}
-                        { /* <input type="range"  id="utilPercentInput" max="100" step="1" value={this.state.utilThreshold} onChange={(e)=>this.setState({utilThreshold: e.target.value})} ></input> */}
+                        <input
+                            type="text"
+                            id="accountNameInput"
+                            onChange={this.searchTable}
+                            value={this.state.accountNameInput}
+                            placeholder="Search Sub-Account Name..."
+                            title="Sub-Account Name"
+                            disabled={this.state.searchStatus}>
+                        </input>
+                        <input
+                            type="text"
+                            id="serverNameInput"
+                            onChange={this.searchTable}
+                            value={this.state.serverNameInput}
+                            placeholder="Search Server Name..."
+                            disabled={this.state.searchStatus}
+                            title="Server Name">
+                        </input>
+                        <input
+                            type="text"
+                            id="mountPointNameInput"
+                            onChange={this.searchTable}
+                            value={this.state.mountPointNameInput}
+                            placeholder="Search Mount Point Name..."
+                            disabled={this.state.searchStatus}
+                            title="Mount Point Name">
+                        </input>
 
-                        { /* <Menu id="utilPercentInput">
-                            <Menu.Item>Utilization Threshold:</Menu.Item>
-                            <Menu.Item><input type='range' max='100' step='1' onChange={this.handleUtilThreshold} value={this.state.utilThreshold}></input></Menu.Item>
-                            <Menu.Item>{this.state.utilThreshold}</Menu.Item>
-                        </Menu> */ }
+                        <label>
+                            <input
+                                id="utilSlider"
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={this.state.utilThreshold}
+                                onChange={this.handleUtilThreshold}
+                                step="1"
+                                disabled={this.state.searchStatus}>
+                            </input>
+                        {this.state.utilThreshold}
+                        </label>
 
-                        <Button onClick={()=>this.setState({"searched":[],"accountNameInput":"",serverNameInput:"",mountPointNameInput:""})}>Reset Search</Button>
+                        <Button onClick={()=>this.setState({
+                            searched:[],
+                            accountNameInput:"",
+                            serverNameInput:"",
+                            mountPointNameInput:"",
+                            utilThreshold: 0
+                            })}>Reset Search</Button>
 
-                    </td>
-                </tr>
+                    </Table.Cell>
+                </Table.Row>
 
                     <Table.Row>
                         <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
@@ -228,7 +281,7 @@ export default class MyNerdlet extends React.Component {
                                 <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
                                 <Table.Cell><a href={serverUrl} target="_blank">{mp.facet[0]}</a></Table.Cell>
                                 <Table.Cell>{mp.facet[1]}</Table.Cell>
-                                <Table.Cell>{mp.utilization.toFixed(2)}</Table.Cell>
+                                <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
                             </Table.Row>
                             )
                         })
@@ -240,7 +293,7 @@ export default class MyNerdlet extends React.Component {
 
     render() {
 
-        let mountPoints = this.state.searched.length > 0 ? this.state.searched : this.state.allStorageSamples
+        let mountPoints =  this.state.accountNameInput != "" || this.state.serverNameInput !="" || this.state.serverNameInput !=""  || this.state.utilThreshold > 0 ? this.state.searched : this.state.allStorageSamples
 
         // output the individual payloads to console
         //console.log(this.state.allStorageSamples)
