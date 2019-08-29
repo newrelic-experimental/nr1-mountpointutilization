@@ -1,12 +1,17 @@
-# nr1-infra-geoops-nerdpack
+# nr1-mountpointutilization-nerdpack
 
+<!--
 ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/newrelic/nr1-infra-geoops-nerdpack?include_prereleases&sort=semver) ![AppVeyor](https://img.shields.io/appveyor/ci/newrelic/nr1-infra-geoops-nerdpack) [![Snyk](https://snyk.io/test/github/newrelic/nr1-infra-geoops-nerdpack/badge.svg)](https://snyk.io/test/github/hospitalrun/hospitalrun-frontend)
+-->
 
 ## Usage
 
-nr1-infra-geoops-nerdpack provides a geographic exploration of Infrastructure and APM data tied to a point of sale solution.
+nr1-mountpointutilization-nerdpack provides a centralized view of mount point utilization statistics collected across all the sub-accounts in your organization
 
+*TO-DO: add redacted screenshot...*
+<!--
 ![Screenshot #1](screenshots/screenshot_01.png)
+-->
 
 ## Open Source License
 
@@ -15,16 +20,14 @@ This project is distributed under the [Apache 2 license](blob/master/LICENSE).
 ## What do you need to make this work?
 
 1. [New Relic Infrastructure Agent(s) installed](https://newrelic.com/products/infrastructure) and the related access to [New Relic One](https://newrelic.com/platform).
-2. (Recommended) Add the customer-defined `locationId` to the `newrelic_infra.yml`. See an example [here](blob/master/examples/example_newrelic_infra.yml).
-3. (Currently) Updating (or replacing) the [geoopsConfig.js](blob/master/geoopsConfig.js) file.
 
 ## Getting started
 
 Clone this repository and run the following scripts:
 
 ```bash
-git clone https://github.com/newrelic/nr1-infra-geoops-nerdpack.git
-cd nr1-infra-geoops-nerdpack
+git clone https://github.com/newrelic/nr1-mountpointutilization-nerdpack.git
+cd nr1-mountpointutilization-nerdpack
 npm install
 npm start
 ```
