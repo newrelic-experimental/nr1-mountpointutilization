@@ -1,10 +1,9 @@
 // symantic CSS
 @import url("//cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css");
 
+// padding on the outside of the entire render
 .wrapper {
-
     padding: 16px;
-
 }
 
 // font settings for progress area
@@ -33,6 +32,7 @@
     }
 }
 
+// label for radio buttons
 label {
     color: #000e0e;
     font-size: 14px;
@@ -40,6 +40,7 @@ label {
     position: relative;
 }
 
+// radio button styles
 .radio-option {
     -webkit-box-align: center;
     align-items: center;
@@ -49,6 +50,7 @@ label {
     font-weight: bold;
 }
 
+// table settings
 .tableHeader {
     font-size: 20px;
 }
@@ -59,14 +61,10 @@ label {
 
 .hostContents {
     color: #4183c4;
+    cursor: pointer;
 }
 
-/* .chart {
-    padding: 10px;
-    width: 100%;
-    height: 300px;
-} */
-
+// search filter options
 #accountNameInput {
     width: 100%;
     font-size: 16px;
@@ -91,9 +89,8 @@ label {
     margin-bottom: 12px;
 }
 
-
 #utilSlider {
-    width: 100%;
+    max-width: 100%;
 }
 
 #utilLabel {

@@ -1,8 +1,8 @@
 {
     "schemaType": "LAUNCHER",
     "id": "my-launcher",
-    "description": "Describe me",
+    "description": "Provides a centralized view of mount point utilization statistics collected across all the sub-accounts in your organization",
     "displayName": "DBA MOUNT POINTS",
-    "icon": "interface_placeholders_icon-placeholder",
+    "icon": "hardware-&-software_software_database",
     "rootNerdletId": "e43eb340-7a23-4c6e-b5b2-e85417874f77.my-nerdlet"
 }
