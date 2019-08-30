@@ -40,7 +40,7 @@ export default class MyNerdlet extends React.Component {
 
         // bind all event handlers
         this.handleQueryStorage = this.handleQueryStorage.bind( this )
-        this.renderTable = this.renderTable.bind( this )
+        this.renderTableBody = this.renderTableBody.bind( this )
         this.handleSearchTable = this.handleSearchTable.bind( this )
         this.handleUtilThreshold = this.handleUtilThreshold.bind( this )
         this.handleStackEntity = this.handleStackEntity.bind( this )
@@ -158,53 +158,30 @@ export default class MyNerdlet extends React.Component {
 
     }
 
-    // function to handle moving the utilization threshold slider
-    handleUtilThreshold(e) {
-
-        // start by waiting until the slider gives us a value
-        if( e.target.value !== null && e.target.value !== undefined ){
-
-            // set the utilThreshold == the slider value
-            this.setState( { utilThreshold: e.target.value } )
-
-        }else{
-
-            // if the slider isn't returning a value; set it to empty* and log a console message
-            // * note this is not the same as NULL, which indicates the purposeful absence of any value ('empty' < "" > is in itself a value)
-            this.setState( { utilThreshold : "" } )
-            console.log("util slider was null or undefined, setting to empty")
-
-        }
-
-        // check if the utilThreshold is above 0, and then filter our results
-        if( this.state.utilThreshold > 0 ){
-
-            // assign the contents of our unfiltered data to 'searchResults'
-            let searchResults = this.state.allStorageSamples
-
-            // filter on 'searched', finding all values where the 'allStorageSamples' data is above the threshold
-            searchResults = searchResults.filter( ( utilSample ) => utilSample.utilization > this.state.utilThreshold )
-
-            // set the contents of 'searched' to the results post-filtering
-            this.setState( { searched:searchResults } )
-
-        }
-
-    }
-
     // function to handle the search input boxes
     async handleSearchTable(e){
 
         // check for contents, and set the state relative to the input box to the value on input
         // note using the syntax [e.target.id] allows a dynamic match from the input box id to the literal state name from constructor()
-        if( e.target.value != "" ){
+        if( e.target.value != "" &&
+            e.target.value !== null &&
+            e.target.value !== undefined ){
 
             await this.setState( { [ e.target.id ]:e.target.value } )
 
         }else{
 
-            // if the input box is empty, let's make sure the state matches
-            await this.setState( { [ e.target.id ]:"" } )
+            if( [ e.target.id ] == "utilThreshold" ) {
+
+                // if the input box is empty, let's make sure the state matches
+                await this.setState( { [ e.target.id ]:0 } )
+
+            } else {
+
+                // if the input box is empty, let's make sure the state matches
+                await this.setState( { [ e.target.id ]:"" } )
+
+            }
 
         }
 
@@ -213,7 +190,7 @@ export default class MyNerdlet extends React.Component {
         if( this.state.accountNameInput != "" ||
             this.state.serverNameInput != "" ||
             this.state.mountPointNameInput != "" ||
-            this.state.utilThreshold != "" ){
+            this.state.utilThreshold > 0 ){
                 console.log("A: ",this.state.accountNameInput,"S: ",this.state.serverNameInput,"M: ",this.state.mountPointNameInput,"U: ",this.stateUtilThreshold)
                 // assign the contents of our unfiltered data to 'searchedResults'
                 let searchResults = this.state.allStorageSamples
@@ -222,6 +199,7 @@ export default class MyNerdlet extends React.Component {
                 searchResults = searchResults.filter( ( accountSample ) => accountSample.accountName.toLowerCase().includes( this.state.accountNameInput ) )
                 searchResults = searchResults.filter( ( serverSample ) => serverSample.facet[0].toLowerCase().includes( this.state.serverNameInput ) )
                 searchResults = searchResults.filter( ( mountPointSample ) => mountPointSample.facet[1].toLowerCase().includes( this.state.mountPointNameInput ) )
+                searchResults = searchResults.filter( ( utilSample ) => utilSample.utilization > this.state.utilThreshold )
 
                 // set the contents of 'searched' to the results post-filtering
                 this.setState( { searched:searchResults } )
@@ -232,10 +210,11 @@ export default class MyNerdlet extends React.Component {
         // note the double ampersands ( && ) are equivalent to the 'AND' operand
         if( this.state.accountNameInput == "" &&
             this.state.serverNameInput == "" &&
-            this.state.mountPointNameInput == "" ){
+            this.state.mountPointNameInput == "" &&
+            this.state.utilThreshold == 0 ){
 
                 // log to console for troubleshooting
-                console.log( "input boxes found empty, resetting all search fields" )
+                console.log( "input boxes and slider found empty, resetting all search fields" )
 
                 // set the contents of 'searched' the the results pre-filtering
                 this.setState( { searched :this.state.allStorageSamples } )
@@ -267,7 +246,7 @@ export default class MyNerdlet extends React.Component {
     }
 
     // function to create the output table in the render() method
-    renderTable(e){
+    renderTableBody(e){
 
         return (
             <Table celled striped id="myTable">
@@ -319,7 +298,7 @@ export default class MyNerdlet extends React.Component {
 
     }
 
-    renderHeader() {
+    renderSearchRow() {
 
         return(
 
@@ -375,12 +354,12 @@ export default class MyNerdlet extends React.Component {
                         <label>
 
                             <input
-                                id="utilSlider"
+                                id="utilThreshold"
                                 type="range"
                                 min="0"
                                 max="100"
                                 value={ this.state.utilThreshold }
-                                onChange={ this.handleUtilThreshold }
+                                onChange={ this.handleSearchTable }
                                 step="1"
                                 disabled={ this.state.searchStatus }>
                             </input>
@@ -428,6 +407,65 @@ export default class MyNerdlet extends React.Component {
         )
 
     }
+
+    rendertopRow() {
+
+        return(
+
+            <Stack>
+
+                <StackItem grow>
+
+                    { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
+                    <RadioGroup
+
+                        className='radio-group'
+                        name="dba-team"
+                        onChange={ this.handleQueryStorage }>
+
+                        <div className='radio-option'>
+                            <Radio value="db2" />DB2 TEAM
+                            <Radio value="sql" />MSSQL TEAM
+                            <Radio value="oracle" />ORACLE TEAM
+                        </div>
+
+                    </RadioGroup>
+
+                </StackItem>
+
+                <StackItem>
+
+                    { /* build a progress indicator */ }
+                    <div className='progress'>
+
+                    { /* build and X/Y counter display */ }
+                    { this.state.accountsFinished + "/" + this.state.accounts.length }
+                    </div>
+
+                </StackItem>
+
+                <StackItem>
+
+                    { /* keep the spinner spinning until we're done iterating through accounts */ }
+                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
+                        ?
+                        <Icon
+                            loading name='sync'
+                            size='large'
+                            color='green'>
+                        </Icon>
+                        :
+                        ""
+                    }
+
+                </StackItem>
+
+            </Stack>
+
+        )
+
+    }
+
     render() {
 
         // if any of our fitlers are in use, populate the table with the results of the search, otherwise give us the full table
@@ -444,54 +482,14 @@ export default class MyNerdlet extends React.Component {
 
             <div className="wrapper">
 
-            <Stack>
-                { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
+                { /* execute the renderTopRow method */ }
+                { this.rendertopRow() }
 
-                <StackItem grow>
+                { /* execute the renderSearchRow method */ }
+                { this.renderSearchRow() }
 
-                    <RadioGroup
-                        className='radio-group'
-                        name="dba-team"
-                        onChange={ this.handleQueryStorage }>
-
-                        <div className='radio-option'>
-                            <Radio value="db2" />DB2 TEAM
-                            <Radio value="sql" />MSSQL TEAM
-                            <Radio value="oracle" />ORACLE TEAM
-                        </div>
-                    </RadioGroup>
-
-                </StackItem>
-
-                <StackItem>
-                    { /* build a progress indicator */ }
-                    <div className='progress'>
-
-                    { /* build and X/Y counter display */ }
-                    { this.state.accountsFinished + "/" + this.state.accounts.length }
-                    </div>
-                </StackItem>
-
-                <StackItem>
-                    { /* keep the spinner spinning until we're done iterating through accounts */ }
-                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
-                        ?
-                        <Icon
-                            loading name='sync'
-                            size='large'
-                            color='green'>
-                        </Icon>
-                        :
-                        ""
-                    }
-                </StackItem>
-
-            </Stack>
-
-                {this.renderHeader()}
-
-                { /* execute the renderTable method */ }
-                { this.renderTable(e) }
+                { /* execute the renderTableBody method */ }
+                { this.renderTableBody(e) }
 
             </div>
 
