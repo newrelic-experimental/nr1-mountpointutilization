@@ -1,7 +1,7 @@
 // intro to ES6 imports: https://appdividend.com/2019/01/23/javascript-import-statement-tutorial-with-example/
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, navigation, NerdGraphQuery, Stack, StackItem } from 'nr1';
+import { Button, navigation, NerdGraphQuery, Spinner, Stack, StackItem } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
 import { Icon, Table } from 'semantic-ui-react'
 import gql from 'graphql-tag';
@@ -35,6 +35,7 @@ export default class MyNerdlet extends React.Component {
             serverNameInput: "",
             mountPointNameInput: "",
             searchStatus: "disabled", // this is used to suppress the filtering options until the table is rendered
+            radioSelection: "",
 
         };
 
@@ -43,6 +44,7 @@ export default class MyNerdlet extends React.Component {
         this.renderTableBody = this.renderTableBody.bind( this )
         this.handleSearchTable = this.handleSearchTable.bind( this )
         this.handleStackEntity = this.handleStackEntity.bind( this )
+        this.handleRadioChange = this.handleRadioChange.bind( this )
 
     }
 
@@ -63,6 +65,20 @@ export default class MyNerdlet extends React.Component {
         // http://web.archive.org/web/20161108071447/http://blog.osteele.com/posts/2007/12/cheap-monads/
         let accounts = ( ( ( results || {} ).data || {} ).actor || {} ).accounts || []
         this.setState( { accounts: accounts } )
+
+    }
+
+    // function to update radio button selections
+    async handleRadioChange(limit) {
+
+        if( limit ) {
+
+            //this.setState( {  } )
+            console.log( "radio select =", limit )
+            await this.setState( { radioSelection: limit } );
+            this.handleQueryStorage(limit)
+
+        }
 
     }
 
@@ -249,7 +265,8 @@ export default class MyNerdlet extends React.Component {
 
         return(
 
-            <Stack>
+            <Stack
+            alignmentType={Stack.ALIGNMENT_TYPE.CENTER}>
 
                 <StackItem grow>
 
@@ -258,7 +275,8 @@ export default class MyNerdlet extends React.Component {
 
                         className='radio-group'
                         name="dba-team"
-                        onChange={ this.handleQueryStorage }>
+                        onChange={ this.handleRadioChange }
+                        selectedValue={ this.state.radioSelection }>
 
                         <div className='radio-option'>
                             <Radio value="db2" />DB2 TEAM
@@ -276,7 +294,7 @@ export default class MyNerdlet extends React.Component {
                     <div className='progress'>
 
                     { /* build and X/Y counter display */ }
-                    { this.state.accountsFinished + "/" + this.state.accounts.length }
+                    { "Sub-Accounts Processed: " + this.state.accountsFinished + "/" + this.state.accounts.length }
                     </div>
 
                 </StackItem>
@@ -286,11 +304,7 @@ export default class MyNerdlet extends React.Component {
                     { /* keep the spinner spinning until we're done iterating through accounts */ }
                     { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
                         ?
-                        <Icon
-                            loading name='sync'
-                            size='large'
-                            color='green'>
-                        </Icon>
+                        <Spinner fillContainer={true}/>
                         :
                         ""
                     }
