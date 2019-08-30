@@ -1,9 +1,9 @@
 // intro to ES6 imports: https://appdividend.com/2019/01/23/javascript-import-statement-tutorial-with-example/
 import React from 'react';
 import PropTypes from 'prop-types';
-import { NerdGraphQuery, navigation, Stack, StackItem } from 'nr1';
+import { Button, navigation, NerdGraphQuery, Stack, StackItem } from 'nr1';
 import { RadioGroup, Radio } from 'react-radio-group';
-import { Icon, Table, Button } from 'semantic-ui-react'
+import { Icon, Table } from 'semantic-ui-react'
 import gql from 'graphql-tag';
 
 export default class MyNerdlet extends React.Component {
@@ -42,7 +42,6 @@ export default class MyNerdlet extends React.Component {
         this.handleQueryStorage = this.handleQueryStorage.bind( this )
         this.renderTableBody = this.renderTableBody.bind( this )
         this.handleSearchTable = this.handleSearchTable.bind( this )
-        this.handleUtilThreshold = this.handleUtilThreshold.bind( this )
         this.handleStackEntity = this.handleStackEntity.bind( this )
 
     }
@@ -245,59 +244,66 @@ export default class MyNerdlet extends React.Component {
 
     }
 
-    // function to create the output table in the render() method
-    renderTableBody(e){
+    // function to create the top row in the render() method
+    rendertopRow() {
 
-        return (
-            <Table celled striped id="myTable">
+        return(
 
-                <Table.Header className="tableHeader">
+            <Stack>
 
-                    <Table.Row>
-                        <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
-                        <Table.HeaderCell>SERVER</Table.HeaderCell>
-                        <Table.HeaderCell>MOUNT POINT</Table.HeaderCell>
-                        <Table.HeaderCell>UTILIZATION %</Table.HeaderCell>
-                    </Table.Row>
+                <StackItem grow>
 
-                </Table.Header>
+                    { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
+                    <RadioGroup
 
-                <Table.Body className="tableContents">
+                        className='radio-group'
+                        name="dba-team"
+                        onChange={ this.handleQueryStorage }>
 
-                    { /*  iterate through all of the results, adding a single row for each */ }
-                    {
-                        e.map((mp, i)=>{
+                        <div className='radio-option'>
+                            <Radio value="db2" />DB2 TEAM
+                            <Radio value="sql" />MSSQL TEAM
+                            <Radio value="oracle" />ORACLE TEAM
+                        </div>
 
-                            { /* build a URL to take you to the infra dashboard for the select sub-account */ }
-                            let accountUrl = `https://infrastructure.newrelic.com/accounts/${mp.accountId}`
+                    </RadioGroup>
 
-                            return (
+                </StackItem>
 
-                                <Table.Row key={i}>
+                <StackItem>
 
-                                    <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
-                                    <Table.Cell className="hostContents" onClick={ () => this.handleStackEntity(mp.facet[2]) }>
-                                        <Icon name='chart area' /> {mp.facet[0]}
-                                    </Table.Cell>
-                                    <Table.Cell>{mp.facet[1]}</Table.Cell>
-                                    <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
+                    { /* build a progress indicator */ }
+                    <div className='progress'>
 
-                                </Table.Row>
+                    { /* build and X/Y counter display */ }
+                    { this.state.accountsFinished + "/" + this.state.accounts.length }
+                    </div>
 
-                            )
+                </StackItem>
 
-                        })
+                <StackItem>
 
+                    { /* keep the spinner spinning until we're done iterating through accounts */ }
+                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
+                        ?
+                        <Icon
+                            loading name='sync'
+                            size='large'
+                            color='green'>
+                        </Icon>
+                        :
+                        ""
                     }
 
-                </Table.Body>
+                </StackItem>
 
-            </Table>
+            </Stack>
 
         )
 
     }
 
+    // function to create the input boxes and slider row in the render() method
     renderSearchRow() {
 
         return(
@@ -386,6 +392,8 @@ export default class MyNerdlet extends React.Component {
 
                     <StackItem>
                         <Button
+                            type={Button.TYPE.DESTRUCTIVE}
+                            iconType={Button.ICON_TYPE.INTERFACE__STATE__CRITICAL}
                             onClick={()=>this.setState({
                                 searched:[],
                                 accountNameInput:"",
@@ -408,63 +416,60 @@ export default class MyNerdlet extends React.Component {
 
     }
 
-    rendertopRow() {
+    // function to create the output table in the render() method
+    renderTableBody(e){
 
-        return(
+        return (
+            <Table celled striped id="myTable">
 
-            <Stack>
+                <Table.Header className="tableHeader">
 
-                <StackItem grow>
+                    <Table.Row>
+                        <Table.HeaderCell>SUB-ACCOUNT</Table.HeaderCell>
+                        <Table.HeaderCell>SERVER</Table.HeaderCell>
+                        <Table.HeaderCell>MOUNT POINT</Table.HeaderCell>
+                        <Table.HeaderCell>UTILIZATION %</Table.HeaderCell>
+                    </Table.Row>
 
-                    { /* build a radio group from react-radio-group with buttons mapped to the DBA teams */ }
-                    <RadioGroup
+                </Table.Header>
 
-                        className='radio-group'
-                        name="dba-team"
-                        onChange={ this.handleQueryStorage }>
+                <Table.Body className="tableContents">
 
-                        <div className='radio-option'>
-                            <Radio value="db2" />DB2 TEAM
-                            <Radio value="sql" />MSSQL TEAM
-                            <Radio value="oracle" />ORACLE TEAM
-                        </div>
+                    { /*  iterate through all of the results, adding a single row for each */ }
+                    {
+                        e.map((mp, i)=>{
 
-                    </RadioGroup>
+                            { /* build a URL to take you to the infra dashboard for the select sub-account */ }
+                            let accountUrl = `https://infrastructure.newrelic.com/accounts/${mp.accountId}`
 
-                </StackItem>
+                            return (
 
-                <StackItem>
+                                <Table.Row key={i}>
 
-                    { /* build a progress indicator */ }
-                    <div className='progress'>
+                                    <Table.Cell><a href={accountUrl} target="_blank">{mp.accountName}</a></Table.Cell>
+                                    <Table.Cell className="hostContents" onClick={ () => this.handleStackEntity(mp.facet[2]) }>
+                                        <Icon name='chart area' /> {mp.facet[0]}
+                                    </Table.Cell>
+                                    <Table.Cell>{mp.facet[1]}</Table.Cell>
+                                    <Table.Cell>{mp.utilization.toFixed(0)}</Table.Cell>
 
-                    { /* build and X/Y counter display */ }
-                    { this.state.accountsFinished + "/" + this.state.accounts.length }
-                    </div>
+                                </Table.Row>
 
-                </StackItem>
+                            )
 
-                <StackItem>
+                        })
 
-                    { /* keep the spinner spinning until we're done iterating through accounts */ }
-                    { this.state.accountsFinished != this.state.accounts.length && this.state.accountsFinished != 0
-                        ?
-                        <Icon
-                            loading name='sync'
-                            size='large'
-                            color='green'>
-                        </Icon>
-                        :
-                        ""
                     }
 
-                </StackItem>
+                </Table.Body>
 
-            </Stack>
+            </Table>
 
         )
 
     }
+
+
 
     render() {
 
