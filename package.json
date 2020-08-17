@@ -21,7 +21,7 @@
         "react": "^16.9.0",
         "react-dom": "^16.9.0",
         "react-radio-group": "^3.0.3",
-        "semantic-ui-react": "^0.88.0"
+        "semantic-ui-react": "^0.88.2"
     },
     "browserslist": [
         "last 2 versions",
