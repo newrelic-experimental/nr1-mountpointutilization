@@ -2,6 +2,8 @@
 
 # nr1-mountpointutilization-nerdpack
 
+* This repository has been archived. If a new maintainer wants to step forward, contact opensource@newrelic.com. *
+
 <!--
 ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/newrelic/nr1-infra-geoops-nerdpack?include_prereleases&sort=semver) ![AppVeyor](https://img.shields.io/appveyor/ci/newrelic/nr1-infra-geoops-nerdpack) [![Snyk](https://snyk.io/test/github/newrelic/nr1-infra-geoops-nerdpack/badge.svg)](https://snyk.io/test/github/hospitalrun/hospitalrun-frontend)
 -->
